@@ -1,11 +1,14 @@
 
 
-let canvas = document.body.querySelector('canvas');
-ctx = canvas.getContext("2d");
+let canvas;
+let xhr = new XMLHttpRequest();
+let interval;
+
 wind = {
     w:800,
     h:480
 }
+
 //tuile represente nos disque
 class Tuile {
     /*
@@ -205,70 +208,167 @@ function parcourEvent(pile){
     }
 }
 
-
-
 let cx = 0;
 let cy = 0;
 let rectSelect = null;
-let rect1 = new Tuile(20,15,30,25,1);
-let rect2 = new Tuile(20,15,30,25,2);
-let rect3 = new Tuile(20,15,30,25,3);
-let rect4 = new Tuile(20,15,30,25,4);
-
-let pile = new PileEvent(rect1,1);
-pile.add(rect2);
-pile.add(rect3);
-pile.add(rect4);
-
-//parcour(pile);
-
-
-let tableau = [rect1,rect2,rect3,rect4]
 let tableauSocle = [new Socle(25,400),new Socle(250,400),new Socle(450,400)]
-    
 
 
 
+//fonction qui initialise le jeux 
+let Game_init = function(rect1, rect2, rect3, rect4) {
 
+    let pile = new PileEvent(rect1,1);
+    pile.add(rect2);
+    pile.add(rect3);
+    pile.add(rect4);
 
+    //parcour(pile);
 
+    let tableau = [rect1,rect2,rect3,rect4]
 
+     interval = setInterval(function(){
 
-
-
-setInterval(function(){
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0,0,wind.w,wind.h)
-    //update regle 
-    
-    tableauSocle.forEach(element => {
-        element.draw();
-    });
-    parcourEvent(pile)
-    //console.log(rect1.dir.right);
-},1000/60);
-
-
-
-    canvas.addEventListener("mousemove",function(e){
-        //console.log(e);
-        cx = e.offsetX;
-        cy = e.offsetY;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0,0,wind.w,wind.h)
+        //update regle 
         
-        //rect1.update(cx,cy)
-        //console.log(rect1.in)
-    });
-    canvas.addEventListener("mousedown",function(){
-           
-                pile.clickdown(cx,cy);
-    });
-    canvas.addEventListener("mouseup",function(){
+        tableauSocle.forEach(element => {
+            element.draw();
+        });
+        parcourEvent(pile)
+        //console.log(rect1.dir.right);
+    },1000/60);
+
+
+
+        canvas.addEventListener("mousemove",function(e){
+            //console.log(e);
+            cx = e.offsetX;
+            cy = e.offsetY;
+            
+            //rect1.update(cx,cy)
+            //console.log(rect1.in)
+        });
+        canvas.addEventListener("mousedown",function(){
+            
+                    pile.clickdown(cx,cy);
+        });
+        canvas.addEventListener("mouseup",function(){
+            
+                pile.clickup();
+                /*element.stop();
+                element.place(t1);*/
+                //element.blur()
+            
+        });
+
+        document.querySelector('.endGame').addEventListener('click', () => {
+            document.querySelector('.game').innerHTML = '';
+            let _data = {
+                param : 'insert',
+                rect_1 : rect1.x + ' ' + rect1.y + ' - ',
+                rect_2 : rect2.x + ' ' + rect2.y + ' - ',
+                rect_3 : rect3.x + ' ' + rect3.y + ' - ',
+                rect_4 : rect4.x + ' ' + rect4.y
+               
+                }
+            xhr.open('POST','../../manager.php', true);
+            xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
+            xhr.send(JSON.stringify(_data));/* envoie d'une requete au serveur pour
+            sauvergarder les positions actuelle des cylindres */
+
+            xhr.onreadystatechange = () => {
+                if(xhr.readyState === 4) {
+                    if(xhr.response) {
+                        document.querySelector('.game').style.display = 'none';
+                        document.querySelector('.avant_garde').style.display = 'block';
+                        document.querySelector('.avant_garde').style.animation = 'apear 0.5s ease';
+                    }
+                }
+            }
         
-            pile.clickup();
-            /*element.stop();
-            element.place(t1);*/
-            //element.blur()
-        
-    });
-    
+        })
+}    
+
+
+
+// Start a new game
+
+document.querySelector('.newGame').addEventListener('click', () => {
+    let button = document.createElement('button')
+    button.setAttribute('class', 'endGame');
+    button.innerText = 'sortie';
+    let cvs = document.createElement('canvas');
+    cvs.setAttribute('width', 800);
+    cvs.setAttribute('height', 480);
+    document.querySelector('.game').appendChild(cvs);
+    document.querySelector('.game').appendChild(button);
+    canvas = document.body.querySelector('canvas');
+    ctx = canvas.getContext("2d");
+
+
+    clearInterval(interval);
+    ctx.clearRect(0,0,800,480);
+    document.querySelector('.avant_garde').style.display = 'none';
+    document.querySelector('.game').style.display = 'flex';
+    document.querySelector('.game').style.animation = 'apear 0.5s ease';
+
+    Game_init(new Tuile(20,15,30,25,1),
+              new Tuile(20,15,30,25,2),
+              new Tuile(20,15,30,25,3),
+              new Tuile(20,15,30,25,4)
+            );
+})
+
+
+// Recuperer l'etat precedent du jeux
+document.querySelector('.continue').addEventListener('click', () => {
+    //cree le canvas
+    let button = document.createElement('button')
+    button.setAttribute('class', 'endGame');
+    button.innerText = 'sortie';
+    let cvs = document.createElement('canvas');
+    cvs.setAttribute('width', 800);
+    cvs.setAttribute('height', 480);
+    document.querySelector('.game').appendChild(cvs);
+    document.querySelector('.game').appendChild(button);
+    canvas = document.body.querySelector('canvas');
+    ctx = canvas.getContext("2d");
+
+    clearInterval(interval);
+    ctx.clearRect(0,0,800,480);
+    let _data = {
+        param : 'fetch'
+    }
+    xhr.open('POST','../../manager.php', true);
+    xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
+    xhr.send(JSON.stringify(_data)); /* envoie d'une requete au serveur pour
+    recuperer les positions enregistrées des cylindres */
+
+    xhr.onreadystatechange = () => {
+        if(xhr.readyState === 4) {
+            if(xhr.response) {
+                // once receive data from sever then we display game area
+                document.querySelector('.avant_garde').style.display = 'none';
+                document.querySelector('.game').style.display = 'flex';
+                document.querySelector('.game').style.animation = 'apear 0.5s ease';
+
+                let data = xhr.responseText.split(' - ');
+               
+                let coor_1 = data[0].split(' ');
+                let coor_2 = data[1].split(' ');
+                let coor_3 = data[2].split(' ');
+                let coor_4 = data[3].split(' ');
+
+                // init game with data received from server
+                Game_init(new Tuile(Number(coor_1[0]), Number(coor_1[1]), 30, 25, 1),
+                          new Tuile(Number(coor_2[0]),Number(coor_2[1]), 30, 25, 2),
+                          new Tuile(Number(coor_3[0]), Number(coor_3[1]), 30, 25, 3),
+                          new Tuile(Number(coor_4[0]), Number(coor_4[1]), 30, 25, 4)
+                );
+            }
+        }
+    }
+
+})
