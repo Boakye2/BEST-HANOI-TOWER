@@ -29,9 +29,10 @@ class Tuile {
         this.socle = null;
         this.b_x = this.x;
         this.b_y = this.y;
-
+        this.up = null;//rectangle au dessu 
+        this.down = null;// rectangle en dessou
         this.color = color ;
-
+        this.isSommet = false;
         this.click = false;
         this.in = false;
         this.pos = false;
@@ -54,7 +55,7 @@ class Tuile {
     }
     //voir si cest le disque a deplacer
     logic(){ 
-        if(this.self){
+        if(this.self && this.isSommet){
             this.move(cx,cy)
         }
         
@@ -63,6 +64,23 @@ class Tuile {
 }
 
 //support des disque
+class PileDisque{
+    constructor(elem){
+        this.head = this;
+        this.elem = elem;
+        this.next = null;
+        this.hauteur = 0
+        if(elem!=null)
+            this.hauteur = 1;
+    }
+    add(elem){
+        let tmp = PileDisque(elem);
+        let tete = this.head;
+        this.head = tmp;
+        tmp.next = tete;
+
+    }
+}
 class Socle {
     /**
      * 
@@ -83,6 +101,8 @@ class Socle {
         this.pile = 0;
         this.color = color;
         this.in = false;
+        this.sommet  = null;
+        this.tabSommet = [];
     }
     //verifie si le disque est dans le socle
     insocle(rect){
@@ -113,15 +133,31 @@ class Socle {
 
     }
     //met le disque dans le socle
-    place(rect){
+    place(rect,init = false){
         if(rect == null)
             return;
-        if(rect.click == false && rect.self){
+        if(this.sommet!=null){
+            let rectSommet = this.sommet;
+            if(rectSommet.s < rect.s)
+            {
+                return
+            }
+        }
+        if((rect.click == false && rect.self)|| init ){
             if(rect.socle != null){
-                if(rect.socle == this)
+                let ancienSocle = rect.socle;
+                if(ancienSocle == this)
                     return;
                 if(rect.socle != this){
-                    rect.socle.pile-=1;
+                    ancienSocle.pile-=1;
+                    ancienSocle.tabSommet.pop();
+                    ancienSocle.sommet = ancienSocle.tabSommet[ancienSocle.tabSommet.length-1];
+                    if(ancienSocle.sommet == undefined)
+                        ancienSocle.sommet = null;
+                    if(ancienSocle.tabSommet.length == 0)
+                        ancienSocle.sommet = null;
+                    if(ancienSocle.tabSommet.length > 0)
+                        ancienSocle.tabSommet[ancienSocle.tabSommet.length-1].isSommet = true;
                     this.pile+=1;
                 }
             }
@@ -134,6 +170,14 @@ class Socle {
             rect.b_x = x;
             rect.b_y = y;
             rect.socle = this;
+            if(this.sommet != null){
+                this.sommet.isSommet = false;
+            }
+            if(init)
+                rect.roolback()
+            this.sommet = rect;
+            this.tabSommet.push(this.sommet);
+            rect.isSommet = true;
                 
         }
         //console.log(" x :"+rect.x + "bx "+rect.b_x);
@@ -243,6 +287,10 @@ let Game_init = function(rect1, rect2, rect3, rect4) {
     pile.add(rect3);
     pile.add(rect4);
 
+    tableauSocle[0].place(rect4,true);
+    tableauSocle[0].place(rect3,true);
+    tableauSocle[0].place(rect2,true);
+    tableauSocle[0].place(rect1,true);
     //parcour(pile);
 
     let tableau = [rect1,rect2,rect3,rect4]
