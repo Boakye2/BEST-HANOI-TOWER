@@ -1,6 +1,8 @@
 <?php 
+$mysqli = "mysql:host=localhost;dbname=hanoi";
+$sqlite = "./db/hanoi.db";
 try {
-    $db = new PDO('mysql:host=localhost;dbname=hanoi', 'root', '');
+    $db = new PDO($mysqli,'root','');
 
     $data = json_decode(file_get_contents('php://input'));
 
@@ -30,6 +32,6 @@ try {
     }
 
 } catch (\Throwable $th) {
-    //throw $th;
+    throw $th;
 }
 ?>
