@@ -13,42 +13,8 @@ wind = {
     w:800,
     h:480
 }
-function sycDelay(milliseconde){
-    let start = new Date().getTime();
-    let end = 0;
-    while( (end-start) < milliseconde ){
-        end = new Date().getTime();
-    }
-}
-function refresh(){
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0,0,wind.w,wind.h)
-    //update regle 
-    //sycDelay(5); 
-    tableauSocle.forEach(element => {
-        element.draw();
-        sycDelay(2); 
-    });
-    parcourEvent(pile)
-    sycDelay(200); 
-}
-function Hanoi(n,D,A,I){
-    if(n!=0){
-        Hanoi(n-1,D,I,A);
-        (function(i){
-            setTimeout(function(){
-                A.place(D.sommet,false,true);
-                refresh();
-            },i*5)
-            
-        })(coup)
-        
-             
-       // A.sommet.draw();
-        sycDelay(50);
-        Hanoi(n-1,I,A,D);
-    }
-}
+
+
 
 let coup =0;
 //tuile represente nos disque
@@ -333,20 +299,10 @@ I = tableauSocle[1];
 let Game_init = function(tableauDisque) {
     let init = true;
     pile = null;
-    let cheat = "";
-    let over = false;
+    
     document.body.addEventListener("keypress",function(e){
         //console.log(e)
-        cheat+=e.key;
-        if(cheat.length >=5 ){
-            if(cheat =="serge" && !over)
-            {
-                Hanoi(nb_Block,D,A,I);
-                over = true;
-                cheat = "";
-            }
-            cheat = "";
-        }
+        
     });
     tableauDisque.forEach(element => {
         if(init){
