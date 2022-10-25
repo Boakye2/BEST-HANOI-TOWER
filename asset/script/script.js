@@ -9,12 +9,98 @@ let interval;
 let A = null;
 let D = null;
 let I = null;
+let coupApareent = 0;
+let tableauDisque = null;
 wind = {
     w:800,
     h:480
 }
+function sycDelay(milliseconde){
+    let start = new Date().getTime();
+    let end = 0;
+    while( (end-start) < milliseconde ){
+        end = new Date().getTime();
+    }
+}
 
 
+function refresh(ms){
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0,0,wind.w,wind.h)
+    //update regle 
+    //sycDelay(5); 
+    tableauSocle.forEach(element => {
+        element.draw();
+        //sycDelay(2); 
+    });
+    parcourEvent(pile)
+    sycDelay(ms); 
+}
+function Hanoi(n,D,A,I){
+    if(n!=0){
+        Hanoi(n-1,D,I,A);
+        (function(i){
+            setTimeout(function(){
+                A.place(D.sommet,false,true);
+                refresh(1000);
+            },i*5)
+            
+        })(coup)
+        
+             
+       // A.sommet.draw();
+        Hanoi(n-1,I,A,D);
+    }
+}
+function correctSide(rect,socle){
+    let i = 0;
+    while(i<socle.tabSommet.length){
+        if(rect == socle.tabSommet[i])
+            return true;
+        i++
+    }
+    return false;
+}
+function unlike(a,b,table){
+    for(let i =0;i<table.length;i++)
+    {
+        if(table[i] != a && table[i] != b){
+            return table[i]
+        }
+    }
+    return null;
+    
+
+}
+
+function hanoi_generaliser(n,A){
+    if(n!=0){
+        let Pn = tableauDisque[n-1] 
+        if(Pn.socle == A){
+            hanoi_generaliser(n-1,A);
+        }else{
+            let I = unlike(Pn.socle,A,tableauSocle);
+            if(I == null){
+                console.log("null")
+                return
+            }
+            
+            
+            //(function(i,A,I){
+                hanoi_generaliser(n-1,I);
+              //  setTimeout(function(){
+                    
+                    A.place(Pn.socle.sommet,false,true);
+                   refresh(10);
+                    
+                //},i*50)
+                hanoi_generaliser(n-1,A);
+            //})(coupApareent,A,I)
+            coupApareent++;
+            
+        }
+    }
+}
 
 let coup =0;
 //tuile represente nos disque
@@ -45,6 +131,9 @@ class Tuile {
         this.in = false;
         this.pos = false;
         this.self = false;
+        this.init =true;//quand on click
+        this.percentx = 0;//la position de la souris par raport au debut du disque
+        this.percenty = 0;//la position de la souris par raport au debut du disque
     }
     //dessine le disque
     draw(){
@@ -54,8 +143,17 @@ class Tuile {
     }
     //deplace le disque
     move(cx,cy){
-        this.x = cx;
-        this.y = cy;
+        let w = this.w;
+        let h = this.h;
+        let x = this.x;
+        let y = this.y;
+        if(this.init){
+            this.percentx = w*(cx-x)/(w) ;
+            this.percenty = h*(cy-y)/(h) ;
+            this.init = false;  
+        }
+        this.x = cx-this.percentx;
+        this.y = cy-this.percenty;
     }
     //remet a la position anterieur
     roolback(){
@@ -143,6 +241,7 @@ class Socle {
     }
     //met le disque dans le socle
     place(rect,init = false,algo=false){
+        //await sleep(1000);
         if(rect == null)
             return;
         if(this.sommet!=null){
@@ -299,10 +398,20 @@ I = tableauSocle[1];
 let Game_init = function(tableauDisque) {
     let init = true;
     pile = null;
-    
+    let cheat = "";
+    let over = false;
     document.body.addEventListener("keypress",function(e){
         //console.log(e)
-        
+        cheat+=e.key;
+        if(cheat.length >=5 ){
+            if(cheat =="serge" && !over)
+            {
+                Hanoi(nb_Block,D,A,I);
+                over = true;
+                cheat = "";
+            }
+            cheat = "";
+        }
     });
     tableauDisque.forEach(element => {
         if(init){
@@ -413,7 +522,7 @@ document.querySelector('.newGame').addEventListener('click', () => {
     
 
 
-    let tableauDisque = [];
+    tableauDisque = [];
     //let colors = ["#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000","#FF0000"]
     for(let i = 0;i<nb_Block;i++){
         tableauDisque.push(new Tuile(20,15,30,25,i+1,"#"+i+"F"+i+"F"+"0"+i))

@@ -24,7 +24,7 @@
             </button>
         </div>
     </div>
-    <style>
+     <style>
         .hide{
             top: -100%;
             opacity: 0;
@@ -96,7 +96,7 @@
         .up{
             top:-22px;
         }
-    </style>
+    </style> 
     <main class="game">
         <div class="win">
             <div class="win-content">
